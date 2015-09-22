@@ -13,15 +13,20 @@ starting_board = <<-BOARD
                 BOARD
 
 def flatten_tree_lazy(board_stream, piece)
-  next_piece = piece == 'Y' ? 'R' : 'Y'
-  next_tier = board_stream.flat_map { |b| possible_next_moves(b, piece)}
-  board_stream.concat(Hamster::Stream.new { flatten_tree_lazy(next_tier, next_piece)})
+  puts board_stream
+  if(board_stream.any?)
+    next_piece = piece == 'Y' ? 'R' : 'Y'
+    next_tier = board_stream.flat_map { |b| possible_next_moves(b, piece)}
+    board_stream.concat(Hamster.stream { flatten_tree_lazy(next_tier, next_piece)})
+  else
+    Hamster.list
+  end
 end
 
 def possible_next_moves(board, piece)
-  (0...board.first.length).map do |n|
+  Hamster.list((0...board.first.length - 1).map do |n|
     add_piece_to_column(board, n, piece)
-  end.compact
+  end.compact)
 end
 
 def add_piece_to_column(board, n, piece)
@@ -78,11 +83,12 @@ end
 
 def pp(board)
   board.reduce('') do |acc, row|
-    acc + row.map { |piece| color(piece) }.join + "\n"
+    acc + row + "\n"
   end
 end
 
 def color(piece)
+  return piece
   case piece
   when 'O'; "●".white
   when 'R'; '●'.red
@@ -93,12 +99,19 @@ end
 
 def pp_list(board_list)
   board_list.reduce('') do |acc, board|
+    puts 'new board'
+    puts board
     acc + pp(board) + "\n"
   end
 end
 
 board = board_list(board_matrix(starting_board))
-tree = flatten_tree_lazy(Hamster.seq { [board] })
+# tree = flatten_tree_lazy([board], 'R')
+# first_50 = tree.take(2)
+# puts(first_50)
 
-puts tree
+p = possible_next_moves(board, 'R')
+pp_list(p)
+#puts(first_50)
+#puts pp_list(first_50)
 #puts pp_list(possible)
