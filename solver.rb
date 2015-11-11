@@ -3,30 +3,87 @@ require 'matrix'
 require 'colorize'
 require 'pry'
 
-starting_board = <<-BOARD
-                  OOOOOOO
-                  OOOOOOO
-                  RYRYOOO
-                  YYYROOO
-                  RRRROOO
-                  YYRRROO
-                BOARD
+@full_board = <<-BOARD
+                RRYRRYR
+                YRYYRRR
+                RYRYRRR
+                YYYRYYY
+                RRYRYRY
+                YYRRRYY
+              BOARD
 
-def flatten_tree_lazy(board_stream, piece)
-  puts board_stream
-  if(board_stream.any?)
-    next_piece = piece == 'Y' ? 'R' : 'Y'
-    next_tier = board_stream.flat_map { |b| possible_next_moves(b, piece)}
-    board_stream.concat(Hamster.stream { flatten_tree_lazy(next_tier, next_piece)})
-  else
-    Hamster.list
+@empty_board = <<-BOARD
+                OOOOOOO
+                OOOOOOO
+                OOOOOOO
+                OOOOOOO
+                OOOOOOO
+                OOOOOOO
+              BOARD
+
+@red_won = <<-BOARD
+            OOOOOOO
+            OOOOOOO
+            ROOOOOO
+            ROOOOOO
+            ROYOOOO
+            ROYYOOO
+          BOARD
+
+
+@red_wins = <<-BOARD
+            OOOOOOO
+            OOOOOOO
+            OOOOOOO
+            ROOOOOO
+            ROYOOOO
+            ROYYOOO
+          BOARD
+
+red_in_2 = <<-BOARD
+            OOOOOOO
+            OOOOOOO
+            OOOOOOO
+            OOOOOOO
+            OOYOOOO
+            YOROROO
+          BOARD
+
+# def flatten_tree_lazy(board_list, piece)
+#   if(board_list.any?)
+#     next_piece = piece == 'Y' ? 'R' : 'Y'
+#     puts 'flat mapping'
+#     next_tier = board_list.flat_map { |b| possible_next_moves(b, piece)}
+#     puts 'concatting'
+#     board_list.concat(Hamster.stream { flatten_tree_lazy(next_tier, next_piece)})
+#   else
+#     puts 'empty'
+#     []
+#   end
+# end
+
+def minimax(board, max_depth = 3, depth = 0, active_piece = 'R', moving_piece = 'R')
+  position_score = position_score(board, active_piece)
+  return position_score if position_score != 0
+  return 0 if depth > max_depth
+  positions = possible_next_boards(board, moving_piece).map do |board| 
+    minimax(board, max_depth, depth + 1, active_piece, opponent(moving_piece))
   end
+  return 0 if positions.empty?
+  positions.max_by { |score| score.abs }
 end
 
-def possible_next_moves(board, piece)
-  Hamster.list((0...board.first.length - 1).map do |n|
+def position(board, score)
+  {
+    board: board,
+    score: score
+  }
+end
+
+def possible_next_boards(board, piece)
+  Hamster.interval(0, board.first.length - 1).map do |n|
     add_piece_to_column(board, n, piece)
-  end.compact)
+  end.compact
 end
 
 def add_piece_to_column(board, n, piece)
@@ -41,7 +98,20 @@ end
 
 #### Detect Winner ####
 
-def board_score(board)
+def opponent(piece)
+  piece == 'Y' ? 'R' : 'Y'
+end
+
+
+def position_score(board, piece)
+  case position_winner(board)
+  when piece; 1
+  when opponent(piece); -1
+  else 0;
+  end
+end
+
+def position_winner(board)
   horizontal_winner(board) || vertical_winner(board)
 end
 
@@ -65,8 +135,6 @@ def vector_winner(row)
   winning_chunk ? winning_chunk[0] : nil
 end
 
-
-
 #### SETUP ####
 
 def board_matrix(level_string)
@@ -79,16 +147,20 @@ def board_list(matrix)
   end)
 end
 
+def load_board(level_string)
+  board_list(board_matrix(level_string))
+end
+
+
 #### PRETTY PRINT ####
 
-def pp(board)
+def format_board(board)
   board.reduce('') do |acc, row|
-    acc + row + "\n"
+    acc + row.map { |i| color(i) }.join + "\n"
   end
 end
 
 def color(piece)
-  return piece
   case piece
   when 'O'; "●".white
   when 'R'; '●'.red
@@ -97,21 +169,12 @@ def color(piece)
   end
 end
 
-def pp_list(board_list)
+def format_list(board_list)
   board_list.reduce('') do |acc, board|
-    puts 'new board'
-    puts board
-    acc + pp(board) + "\n"
+    acc + format_board(board) + "\n\n"
   end
 end
 
-board = board_list(board_matrix(starting_board))
-# tree = flatten_tree_lazy([board], 'R')
-# first_50 = tree.take(2)
-# puts(first_50)
-
-p = possible_next_moves(board, 'R')
-pp_list(p)
-#puts(first_50)
-#puts pp_list(first_50)
-#puts pp_list(possible)
+board = board_list(board_matrix(@empty_board))
+score = minimax(board, 3, 0, 'Y')
+puts score
