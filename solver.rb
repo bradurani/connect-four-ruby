@@ -119,7 +119,32 @@ require 'pry'
 #   winning_chunk ? winning_chunk[0] : nil
 # end
 
-@state_manager = []
+class StateManager
+
+  def initialize
+    @reversing = false
+    @history = []
+  end
+
+  def push(state)
+    @history.push(state)
+    @reversing = false
+  end
+
+  def pop
+    if(@reversing)
+      state = @history.pop
+    else
+      @history.pop
+      state = @history.pop
+    end
+    @reversing = true
+    state
+  end
+
+end
+
+@state_manager = StateManager.new
 
 def add_piece_to_column(board, n, piece)
   top_index = horizontal_highest_piece(board, n)
