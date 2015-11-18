@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    atomic (1.1.99)
+    hamster (1.0.0)
+      atomic (~> 1.1)
+    hamster-matrix (1.0.0)
+      hamster (~> 1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  hamster-matrix
+
+BUNDLED WITH
+   1.10.6
