@@ -158,7 +158,7 @@ end
 
 def move(input, state)
   input = input[0]
-  if(['1','2','3','4','5','6','7'].include?(input))
+  if(['0','1','2','3','4','5','6','7'].include?(input))
     board = add_piece_to_column(state[:board], input.to_i, state[:piece])
     state = {
       board: board,
